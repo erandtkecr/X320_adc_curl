@@ -5,13 +5,14 @@
 
 struct ctx
 {
-    char xml_content[1024];
+    char xml_content[4096];
 };
 
-static size_t write_callback(void *contents, size_t size, size_t nmemb, void *context)
+static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp)
 {
-    struct ctx *my_context = (struct ctx*)context;
-    memcpy(my_context->xml_content, contents, size);
+    int real_size = size*nmemb;
+    struct ctx *context = (struct ctx*)userp;
+    memcpy(context->xml_content, contents, real_size);
 }
 
 int digital_input_state()
@@ -29,7 +30,8 @@ int digital_input_state()
     {
         curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.1.2/state.xml");
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, context);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &context);
+        res = curl_easy_perform(curl);
     }
     else
     {
